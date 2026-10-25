@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A word with its reading set above it, like furigana in print. -->
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:background="@drawable/bg_ocr_word"
+	android:gravity="center_horizontal"
+	android:orientation="vertical"
+	android:paddingHorizontal="3dp"
+	android:paddingVertical="1dp">
+
+	<TextView
+		android:id="@+id/textView_reading"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:includeFontPadding="false"
+		android:textColor="?attr/colorOnSurfaceVariant"
+		android:textSize="10sp"
+		tools:text="たべていた" />
+
+	<TextView
+		android:id="@+id/textView_surface"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textColor="?attr/colorOnSurface"
+		android:textSize="20sp"
+		tools:text="食べていた" />
+
+</LinearLayout>

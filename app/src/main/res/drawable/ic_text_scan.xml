@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A viewfinder over three columns of vertical text: the app's mark, on the empty screen. -->
+<vector
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:width="24dp"
+	android:height="24dp"
+	android:viewportWidth="24"
+	android:viewportHeight="24">
+	<path
+		android:pathData="M3,8V3H8M16,3H21V8M21,16V21H16M8,21H3V16"
+		android:strokeWidth="2"
+		android:strokeColor="@android:color/white"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+	<path
+		android:pathData="M9,7V17M12,7V14M15,7V17"
+		android:strokeWidth="1.8"
+		android:strokeColor="@android:color/white"
+		android:strokeLineCap="round" />
+</vector>

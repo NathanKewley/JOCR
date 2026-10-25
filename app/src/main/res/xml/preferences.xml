@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<PreferenceCategory
+		android:title="@string/pref_reading"
+		app:iconSpaceReserved="false">
+
+		<SwitchPreferenceCompat
+			android:defaultValue="true"
+			android:key="jp_furigana"
+			android:summary="@string/ocr_furigana_summary"
+			android:title="@string/ocr_furigana"
+			app:iconSpaceReserved="false" />
+
+		<SwitchPreferenceCompat
+			android:defaultValue="true"
+			android:key="jp_translation"
+			android:summary="@string/ocr_translation_summary"
+			android:title="@string/ocr_translation"
+			app:iconSpaceReserved="false" />
+
+		<SwitchPreferenceCompat
+			android:defaultValue="true"
+			android:dependency="jp_translation"
+			android:key="jp_translation_hidden"
+			android:summary="@string/ocr_translation_hidden_summary"
+			android:title="@string/ocr_translation_hidden"
+			app:iconSpaceReserved="false" />
+
+	</PreferenceCategory>
+
+	<PreferenceCategory
+		android:title="@string/renshuu"
+		app:iconSpaceReserved="false">
+
+		<EditTextPreference
+			android:key="renshuu_api_key"
+			android:summary="@string/renshuu_api_key_summary"
+			android:title="@string/renshuu_api_key"
+			app:iconSpaceReserved="false" />
+
+		<SwitchPreferenceCompat
+			android:defaultValue="true"
+			android:dependency="renshuu_api_key"
+			android:key="renshuu_presence"
+			android:summary="@string/renshuu_presence_summary"
+			android:title="@string/renshuu_presence"
+			app:iconSpaceReserved="false" />
+
+		<Preference
+			android:icon="@drawable/ic_open_external"
+			android:key="renshuu_open"
+			android:persistent="false"
+			android:title="@string/renshuu_open_settings" />
+
+	</PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>

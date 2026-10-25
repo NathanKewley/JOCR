@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<dimen name="margin_small">4dp</dimen>
+	<!-- Enough to make out where each block is, leaving room on screen for the first few to read. -->
+	<dimen name="photo_max_height">360dp</dimen>
+</resources>

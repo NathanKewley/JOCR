@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="launcher_background">#3F51B5</color>
+
+	<!-- Material 3, following the system's light/dark setting and, where available, its wallpaper colours. -->
+	<style name="Theme.Jocr" parent="Theme.Material3.DayNight.NoActionBar" />
+</resources>

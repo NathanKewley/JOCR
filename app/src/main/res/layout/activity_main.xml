@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+
+	<com.google.android.material.appbar.AppBarLayout
+		android:id="@+id/appBar"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+
+		<com.google.android.material.appbar.MaterialToolbar
+			android:id="@+id/toolbar"
+			android:layout_width="match_parent"
+			android:layout_height="?attr/actionBarSize"
+			app:menu="@menu/main"
+			app:title="@string/app_name" />
+
+	</com.google.android.material.appbar.AppBarLayout>
+
+	<FrameLayout
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1">
+
+		<!-- Half and half: the photo stays put above while the text scrolls below it. -->
+		<LinearLayout
+			android:id="@+id/layout_content"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:orientation="vertical"
+			android:visibility="gone">
+
+			<io.github.nathankewley.jocr.ui.PhotoPreviewView
+				android:id="@+id/photo"
+				android:layout_width="match_parent"
+				android:layout_height="0dp"
+				android:layout_weight="1"
+				android:background="?attr/colorSurfaceContainerLowest"
+				android:contentDescription="@string/photo" />
+
+			<LinearLayout
+				android:id="@+id/layout_status"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center_vertical"
+				android:minHeight="40dp"
+				android:orientation="horizontal"
+				android:paddingHorizontal="16dp">
+
+				<com.google.android.material.progressindicator.CircularProgressIndicator
+					android:id="@+id/progressIndicator"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginEnd="12dp"
+					android:indeterminate="true"
+					app:indicatorSize="20dp" />
+
+				<TextView
+					android:id="@+id/textView_status"
+					android:layout_width="0dp"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:textAppearance="?attr/textAppearanceBodyMedium"
+					android:textColor="?attr/colorOnSurfaceVariant"
+					tools:text="Reading text…" />
+
+				<com.google.android.material.button.MaterialButton
+					android:id="@+id/button_retry"
+					style="?materialButtonTonalStyle"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/try_again"
+					android:visibility="gone" />
+
+			</LinearLayout>
+
+			<androidx.recyclerview.widget.RecyclerView
+				android:id="@+id/recyclerView"
+				android:layout_width="match_parent"
+				android:layout_height="0dp"
+				android:layout_weight="1"
+				android:clipToPadding="false"
+				android:paddingBottom="12dp"
+				tools:listitem="@layout/item_ocr_block" />
+
+		</LinearLayout>
+
+		<LinearLayout
+			android:id="@+id/layout_empty"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:gravity="center"
+			android:orientation="vertical"
+			android:padding="32dp">
+
+			<ImageView
+				android:layout_width="72dp"
+				android:layout_height="72dp"
+				android:importantForAccessibility="no"
+				android:src="@drawable/ic_text_scan"
+				app:tint="?attr/colorPrimary" />
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="16dp"
+				android:gravity="center"
+				android:text="@string/empty_title"
+				android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="8dp"
+				android:gravity="center"
+				android:text="@string/empty_summary"
+				android:textAppearance="?attr/textAppearanceBodyMedium"
+				android:textColor="?attr/colorOnSurfaceVariant" />
+
+		</LinearLayout>
+
+	</FrameLayout>
+
+	<LinearLayout
+		android:id="@+id/bottomBar"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="?attr/colorSurfaceContainer"
+		android:orientation="horizontal"
+		android:paddingHorizontal="12dp"
+		android:paddingVertical="8dp">
+
+		<com.google.android.material.button.MaterialButton
+			android:id="@+id/button_camera"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_marginEnd="6dp"
+			android:layout_weight="1"
+			android:minHeight="56dp"
+			android:text="@string/take_photo"
+			app:icon="@drawable/ic_camera" />
+
+		<com.google.android.material.button.MaterialButton
+			android:id="@+id/button_gallery"
+			style="?materialButtonTonalStyle"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="6dp"
+			android:layout_weight="1"
+			android:minHeight="56dp"
+			android:text="@string/pick_photo"
+			app:icon="@drawable/ic_gallery" />
+
+	</LinearLayout>
+
+</LinearLayout>

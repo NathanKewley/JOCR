@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The same mark as ic_text_scan, sized for the 66dp safe zone of a 108dp adaptive icon. -->
+<vector
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:width="108dp"
+	android:height="108dp"
+	android:viewportWidth="108"
+	android:viewportHeight="108">
+	<path
+		android:pathData="M32,44V32H44M64,32H76V44M76,64V76H64M44,76H32V64"
+		android:strokeWidth="5"
+		android:strokeColor="#FFFFFF"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round" />
+	<path
+		android:pathData="M46,43V65M54,43V59M62,43V65"
+		android:strokeWidth="4.5"
+		android:strokeColor="#FFFFFF"
+		android:strokeLineCap="round" />
+</vector>

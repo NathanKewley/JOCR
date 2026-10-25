@@ -1,0 +1,42 @@
+[versions]
+activity = "1.13.0"
+agp = "8.13.0"
+appcompat = "1.7.1"
+collection = "1.5.0"
+coreKtx = "1.17.0"
+coroutines = "1.10.2"
+junit = "4.13.2"
+kotlin = "2.2.10"
+kuromoji = "0.9.0"
+lifecycle = "2.9.4"
+material = "1.14.0"
+mlkitTextJapanese = "16.0.1"
+mlkitTranslate = "17.0.3"
+okhttp = "5.3.2"
+preference = "1.2.1"
+recyclerview = "1.4.0"
+serialization = "1.9.0"
+
+[libraries]
+androidx-activity = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-collection = { module = "androidx.collection:collection-ktx", version.ref = "collection" }
+androidx-core = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-preference = { module = "androidx.preference:preference-ktx", version.ref = "preference" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+junit = { module = "junit:junit", version.ref = "junit" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm", version.ref = "serialization" }
+kuromoji-ipadic = { module = "com.atilika.kuromoji:kuromoji-ipadic", version.ref = "kuromoji" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+mlkit-text-recognition-japanese = { module = "com.google.mlkit:text-recognition-japanese", version.ref = "mlkitTextJapanese" }
+mlkit-translate = { module = "com.google.mlkit:translate", version.ref = "mlkitTranslate" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
