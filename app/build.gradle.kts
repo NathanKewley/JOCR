@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
 	alias(libs.plugins.android.application)
@@ -23,14 +24,36 @@ android {
 		}
 	}
 
+	// The release key lives outside git, in /keystore. Without it a release build comes out unsigned.
+	val keystoreProperties = rootProject.file("keystore/keystore.properties").takeIf { it.exists() }?.let { file ->
+		Properties().apply { file.inputStream().use(::load) }
+	}
+	signingConfigs {
+		if (keystoreProperties != null) {
+			create("release") {
+				storeFile = rootProject.file("keystore/" + keystoreProperties.getProperty("storeFile"))
+				storePassword = keystoreProperties.getProperty("storePassword")
+				keyAlias = keystoreProperties.getProperty("keyAlias")
+				keyPassword = keystoreProperties.getProperty("keyPassword")
+			}
+		}
+	}
+
 	buildTypes {
 		release {
+			signingConfig = signingConfigs.findByName("release")
 			isMinifyEnabled = true
 			isShrinkResources = true
 			proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 		}
 		debug {
 			applicationIdSuffix = ".debug"
+		}
+	}
+	applicationVariants.all {
+		outputs.all {
+			(this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
+				"jocr-${versionName}-${buildType.name}.apk"
 		}
 	}
 	buildFeatures {
