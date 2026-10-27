@@ -43,14 +43,40 @@
 
 	<!-- Errors -->
 	<string name="error_no_connection">No internet connection</string>
+	<string name="error_connection_lost">The internet connection was lost</string>
+	<string name="error_download_timeout">The download stalled</string>
 	<string name="error_timeout">renshuu took too long to answer</string>
 	<string name="error_renshuu">renshuu returned an error (%d)</string>
 	<string name="error_photo_unreadable">Could not open this photo</string>
 	<string name="error_photo_too_big">This photo is too big to read</string>
 	<string name="error_no_camera">No camera app found</string>
+	<string name="error_models_missing">Choose a text recogniser in settings first</string>
+	<string name="error_model_corrupt">A model did not download correctly</string>
+
+	<!-- Choosing a text recogniser -->
+	<string name="engine_choose_title">Choose a text recogniser</string>
+	<string name="engine_choose_intro">Photos are read on your phone and never uploaded.</string>
+	<string name="engine_paddle_manga" translatable="false">PaddleOCR + manga-ocr</string>
+	<string name="engine_paddle" translatable="false">PaddleOCR</string>
+	<string name="engine_mlkit" translatable="false">ML Kit</string>
+	<string name="engine_download_size">Download: %s</string>
+	<string name="engine_no_download">No download</string>
+	<string name="engine_downloaded">Downloaded</string>
+	<!-- Characters read right on the manga test pages (see OcrEvalTest). -->
+	<string name="engine_accuracy">Accuracy: %d%%</string>
+	<string name="engine_speed">About %ds a page</string>
+	<string name="engine_use">Use</string>
+	<string name="engine_download">Download</string>
+	<string name="engine_downloading">Downloading %s</string>
+	<string name="engine_downloading_message">Keep JOCR open until it finishes. If it stops, it carries on from where it got to next time.</string>
+	<string name="engine_download_progress">%1$s of %2$s</string>
+	<string name="engine_download_failed">Download failed</string>
+	<string name="engine_download_failed_message">%s. What was downloaded is kept, and trying again carries on from there.</string>
 
 	<!-- Settings -->
 	<string name="pref_reading">Reading</string>
+	<string name="ocr_engine">Text recogniser</string>
+	<string name="ocr_engine_none">Not chosen yet</string>
 	<string name="ocr_furigana">Show readings</string>
 	<string name="ocr_furigana_summary">Furigana above words that contain kanji</string>
 	<string name="ocr_translation">English translation</string>

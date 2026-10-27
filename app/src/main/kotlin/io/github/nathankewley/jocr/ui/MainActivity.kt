@@ -23,7 +23,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import io.github.nathankewley.jocr.EngineSetup
+import io.github.nathankewley.jocr.JocrApp
 import io.github.nathankewley.jocr.R
+import io.github.nathankewley.jocr.Settings
 import io.github.nathankewley.jocr.databinding.ActivityMainBinding
 import io.github.nathankewley.jocr.renshuu.RenshuuAuthException
 import io.github.nathankewley.jocr.renshuu.RenshuuWord
@@ -36,6 +39,8 @@ class MainActivity : AppCompatActivity(), OcrListener {
 
 	private lateinit var binding: ActivityMainBinding
 	private val viewModel by viewModels<MainViewModel>()
+	private val app get() = application as JocrApp
+	private val engineDialogs by lazy { EngineDialogs(this, app.engineSetup, app.models) }
 
 	private val blockAdapter = OcrBlockAdapter(this)
 	private var shownBlocks: List<OcrBlockModel> = emptyList()
@@ -107,6 +112,16 @@ class MainActivity : AppCompatActivity(), OcrListener {
 		observe(viewModel.onChooseList, ::showListChooser)
 		observe(viewModel.onMessage, ::showMessage)
 		observe(viewModel.onError, ::showError)
+		observe(combine(app.engineSetup.state, app.settings.observe(Settings.KEY_OCR_ENGINE) { ocrEngine }, ::Pair)) { (state, _) ->
+			engineDialogs.bind(state)
+			if (state == EngineSetup.State.Idle) {
+				if (app.engineSetup.isNeeded) {
+					engineDialogs.showChooser(app.settings.ocrEngine, isFirstRun = true)
+				} else {
+					viewModel.onEngineReady()
+				}
+			}
+		}
 
 		if (savedInstanceState == null) {
 			handleShare(intent)

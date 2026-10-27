@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import io.github.nathankewley.jocr.ocr.OcrEngine
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -16,6 +17,11 @@ class Settings(context: Context) {
 
 	val renshuuApiKey: String?
 		get() = prefs.getString(KEY_RENSHUU_API_KEY, null)?.trim()?.ifEmpty { null }
+
+	/** The recogniser photos are read with, or null until one has been chosen (see [EngineSetup]). */
+	var ocrEngine: OcrEngine?
+		get() = prefs.getString(KEY_OCR_ENGINE, null)?.let(OcrEngine::fromId)
+		set(value) = prefs.edit { putString(KEY_OCR_ENGINE, value?.id) }
 
 	val isFuriganaEnabled: Boolean
 		get() = prefs.getBoolean(KEY_FURIGANA, true)
@@ -50,6 +56,7 @@ class Settings(context: Context) {
 	companion object {
 
 		const val KEY_RENSHUU_API_KEY = "renshuu_api_key"
+		const val KEY_OCR_ENGINE = "ocr_engine"
 		const val KEY_FURIGANA = "jp_furigana"
 		const val KEY_TRANSLATION = "jp_translation"
 		const val KEY_TRANSLATION_HIDDEN = "jp_translation_hidden"

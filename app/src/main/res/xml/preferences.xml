@@ -7,6 +7,12 @@
 		android:title="@string/pref_reading"
 		app:iconSpaceReserved="false">
 
+		<Preference
+			android:key="ocr_engine"
+			android:persistent="false"
+			android:title="@string/ocr_engine"
+			app:iconSpaceReserved="false" />
+
 		<SwitchPreferenceCompat
 			android:defaultValue="true"
 			android:key="jp_furigana"

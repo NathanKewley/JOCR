@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The text recognisers to choose from, each with how accurate and fast it is and what it costs. -->
+<ScrollView
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content">
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		android:paddingHorizontal="24dp"
+		android:paddingTop="8dp">
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/engine_choose_intro"
+			android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+		<RadioGroup
+			android:id="@+id/group_engines"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp" />
+
+	</LinearLayout>
+
+</ScrollView>

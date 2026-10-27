@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.nathankewley.jocr.JocrApp
 import io.github.nathankewley.jocr.Settings
 import io.github.nathankewley.jocr.nlp.isKanji
+import io.github.nathankewley.jocr.ocr.ModelsMissingException
 import io.github.nathankewley.jocr.renshuu.AddToListResult
 import io.github.nathankewley.jocr.renshuu.RenshuuList
 import io.github.nathankewley.jocr.renshuu.RenshuuWord
@@ -32,7 +33,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
 	private val jocr = app as JocrApp
 	private val decoder = jocr.decoder
-	private val recognizer = jocr.recognizer
 	private val tokenizer = jocr.tokenizer
 	private val translator = jocr.translator
 	private val renshuu = jocr.renshuu
@@ -108,6 +108,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 	fun reload() {
 		translations.update { map -> map.filterValues { it is TranslationState.Done } }
 		request.value?.let { open(it.first) }
+	}
+
+	/** Reads the photo again if it was shared before a recogniser had been chosen. */
+	fun onEngineReady() {
+		if ((status.value as? OcrStatus.Failed)?.error is ModelsMissingException) {
+			reload()
+		}
 	}
 
 	fun toggleTranslation(blockId: Int) {
@@ -229,7 +236,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 				status.value = OcrStatus.Working(OcrStatus.Phase.RECOGNIZING)
 				// The dictionary loads on another thread while the recogniser runs.
 				viewModelScope.launch(Dispatchers.Default) { runCatchingCancellable { tokenizer.warmUp() } }
-				recognizer.recognize(bitmap)
+				jocr.recognizer.recognize(bitmap)
 			} finally {
 				bitmap.recycle()
 			}

@@ -2,6 +2,7 @@ package io.github.nathankewley.jocr.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -9,7 +10,9 @@ import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -46,9 +49,14 @@ class SettingsActivity : AppCompatActivity() {
 
 		private val app get() = requireActivity().application as JocrApp
 		private var checkJob: Job? = null
+		private val engineDialogs by lazy { EngineDialogs(requireActivity() as AppCompatActivity, app.engineSetup, app.models) }
 
 		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 			setPreferencesFromResource(R.xml.preferences, rootKey)
+			checkNotNull(findPreference<Preference>(Settings.KEY_OCR_ENGINE)).setOnPreferenceClickListener {
+				engineDialogs.showChooser(app.settings.ocrEngine, isFirstRun = false)
+				true
+			}
 			val apiKey = checkNotNull(findPreference<EditTextPreference>(Settings.KEY_RENSHUU_API_KEY))
 			apiKey.setOnBindEditTextListener {
 				it.setHint(R.string.renshuu_api_key_hint)
@@ -62,6 +70,19 @@ class SettingsActivity : AppCompatActivity() {
 				true
 			}
 			checkApiKey(app.settings.renshuuApiKey.orEmpty())
+		}
+
+		override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+			super.onViewCreated(view, savedInstanceState)
+			val engine = checkNotNull(findPreference<Preference>(Settings.KEY_OCR_ENGINE))
+			viewLifecycleOwner.lifecycleScope.launch {
+				viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+					launch { app.engineSetup.state.collect(engineDialogs::bind) }
+					app.settings.observe(Settings.KEY_OCR_ENGINE) { ocrEngine }.collect { chosen ->
+						engine.summary = getString(chosen?.titleRes() ?: R.string.ocr_engine_none)
+					}
+				}
+			}
 		}
 
 		override fun onPreferenceTreeClick(preference: Preference): Boolean = when (preference.key) {

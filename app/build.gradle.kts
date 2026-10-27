@@ -17,8 +17,10 @@ android {
 		targetSdk = 37
 		versionCode = 1
 		versionName = "0.1.0"
-		// ML Kit's OCR and translation libraries are ~28 MB per ABI. Phones are arm64; x86_64 is
-		// for the emulator. The 32-bit ABIs would add almost 50 MB for devices that no longer exist.
+		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+		// ML Kit's OCR and translation libraries are ~28 MB per ABI, ONNX Runtime ~34 MB more. Phones
+		// are arm64; x86_64 is for the emulator. The 32-bit ABIs would add tens of MB for devices that
+		// no longer exist.
 		ndk {
 			abiFilters += listOf("arm64-v8a", "x86_64")
 		}
@@ -100,6 +102,12 @@ dependencies {
 	implementation(libs.mlkit.translate)
 	implementation(libs.kuromoji.ipadic)
 
+	// Runs PaddleOCR and manga-ocr, the other recognisers to choose from. Their models are downloaded
+	// on the phone when chosen (see ModelStore).
+	implementation(libs.onnxruntime.android)
+
 	testImplementation(libs.junit)
 	testImplementation(libs.kotlinx.coroutines.test)
+	androidTestImplementation(libs.androidx.test.junit)
+	androidTestImplementation(libs.androidx.test.runner)
 }

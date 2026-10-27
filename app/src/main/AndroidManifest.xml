@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools">
 
-	<!-- renshuu lookups, and the one-off download of the translation model. -->
+	<!-- renshuu lookups, and the one-off downloads of the translation and OCR models. -->
 	<uses-permission android:name="android.permission.INTERNET" />
 
 	<!-- Photos are taken by the camera app, so no camera permission - but a phone without one can
@@ -49,6 +50,13 @@
 				android:name="android.support.FILE_PROVIDER_PATHS"
 				android:resource="@xml/file_paths" />
 		</provider>
+
+		<!-- ONNX Runtime reports usage to Microsoft from app start. Photos are read on the phone, and
+		     nothing about them leaves it. -->
+		<provider
+			android:name="ai.onnxruntime.TelemetryInitializer"
+			android:authorities="${applicationId}.onnxruntime_telemetry_initializer"
+			tools:node="remove" />
 
 	</application>
 

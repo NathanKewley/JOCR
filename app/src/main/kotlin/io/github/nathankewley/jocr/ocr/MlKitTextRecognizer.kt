@@ -19,8 +19,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * Reads the Japanese text off a photo, one [OcrBlock] per block of text (a speech bubble, a
- * paragraph, a sign), in reading order (see [ReadingOrder]).
+ * Reads the Japanese text off a photo with ML Kit.
  *
  * ML Kit only really reads horizontal text. It finds where the text in a photo is well enough, but
  * reads a vertical block either column by column as separate fragments or straight across the
@@ -29,7 +28,7 @@ import kotlin.math.roundToInt
  * reading the recogniser is more confident about wins. Horizontal titles and captions keep their
  * first reading; vertical dialogue takes the second.
  */
-class PhotoTextRecognizer {
+class MlKitTextRecognizer : TextRecognizer {
 
 	// The bundled model, not the Play Services one: it works on devices without Google Play, and it
 	// does not have to be downloaded the first time a photo is read.
@@ -37,8 +36,7 @@ class PhotoTextRecognizer {
 		TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
 	}
 
-	/** Reads [bitmap], which stays the caller's: it is not recycled here. */
-	suspend fun recognize(bitmap: Bitmap): List<OcrBlock> {
+	override suspend fun recognize(bitmap: Bitmap): List<OcrBlock> {
 		val blocks = ArrayList<OcrBlock>()
 		for (tile in tiles(bitmap.width, bitmap.height)) {
 			val part = if (tile.height() == bitmap.height) {
@@ -54,11 +52,7 @@ class PhotoTextRecognizer {
 				}
 			}
 		}
-		val text = Paragraphs.join(blocks).filter { block ->
-			// Page numbers, stray marks and lone sound effects: noise between the lines worth studying.
-			block.text.count { it.isJapanese() } >= MIN_JAPANESE_CHARS
-		}
-		return ReadingOrder.sort(text)
+		return arrange(blocks)
 	}
 
 	private suspend fun recognizeTile(bitmap: Bitmap, offsetY: Int, out: MutableList<OcrBlock>) {
@@ -253,31 +247,12 @@ class PhotoTextRecognizer {
 
 	private fun Int.luma(): Int = (Color.red(this) * 299 + Color.green(this) * 587 + Color.blue(this) * 114) / 1000
 
-	/**
-	 * Splits a tall image - a long screenshot, a webtoon strip - into screen-shaped slices.
-	 *
-	 * Fed whole, an 800x12000 strip is scaled down by the recogniser until the text is a few pixels
-	 * high and nothing is read at all. A block cut in two by a slice boundary comes back as two
-	 * blocks, which is a far smaller loss.
-	 */
-	private fun tiles(width: Int, height: Int): List<Rect> {
-		val tileHeight = max(width * 2, MIN_TILE_HEIGHT)
-		if (height <= tileHeight * 5 / 4) {
-			return listOf(Rect(0, 0, width, height))
-		}
-		return (0 until height step tileHeight).map { top ->
-			Rect(0, top, width, min(top + tileHeight, height))
-		}
-	}
-
 	private class Reading(val text: String, val confidence: Float, val isVertical: Boolean)
 
 	private companion object {
 
 		const val MAX_WIDTH = 2000
 		const val MIN_WIDTH = 1600
-		const val MIN_TILE_HEIGHT = 1200
-		const val MIN_JAPANESE_CHARS = 2
 
 		/** Darker than this is ink. Speech bubbles and print are dark text on light, so this need not be clever. */
 		const val INK_THRESHOLD = 140
@@ -296,17 +271,3 @@ class PhotoTextRecognizer {
 		const val STRIP_LINE_HEIGHT = 1.6f
 	}
 }
-
-/** One block of text, with [bounds] and [charSize] in the pixels of the bitmap that was read. */
-data class OcrBlock(
-	val text: String,
-	val bounds: Rect,
-	val isVertical: Boolean,
-	/** The size of one character: what tells a paragraph's next line from the next paragraph. */
-	val charSize: Int,
-)
-
-fun Char.isJapanese(): Boolean = this in '぀'..'ヿ' || // hiragana, katakana
-	this in '一'..'鿿' || // CJK unified ideographs
-	this in '㐀'..'䶿' || // CJK extension A
-	this == '々' // 々
