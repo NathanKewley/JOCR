@@ -96,4 +96,42 @@ class TextDetectionTest {
 		val columns = listOf("え?" to Box(560, 40, 590, 120), "なんで" to Box(600, 40, 636, 200))
 		assertEquals(columns, TextDetection.withoutFurigana(columns, box = { it.second }, text = { it.first }))
 	}
+
+	/** The five columns of a narration page, as the detector found them: one column in two pieces. */
+	@Test
+	fun wideBlocksAreCutIntoChunksOfColumns() {
+		val columns = listOf(
+			Box(900, 0, 950, 500), Box(840, 0, 890, 300), Box(845, 320, 885, 480),
+			Box(780, 0, 830, 500), Box(720, 0, 770, 400), Box(660, 0, 710, 500),
+		)
+		val area = Box(650, -10, 960, 510)
+		assertEquals(
+			listOf(Box(835, -10, 960, 510), Box(715, -10, 835, 510), Box(650, -10, 715, 510)),
+			TextDetection.columnChunks(area, columns, 2),
+		)
+	}
+
+	@Test
+	fun aNarrowBlockIsOneChunk() {
+		val area = Box(0, 0, 100, 300)
+		assertEquals(listOf(area), TextDetection.columnChunks(area, listOf(Box(50, 0, 95, 300), Box(5, 0, 45, 300)), 2))
+	}
+
+	/** A name caption from a manga page: おうたいし set over 王太子, and a separate title above both. */
+	@Test
+	fun furiganaOverHorizontalTextAreDropped() {
+		val lines = listOf(
+			"ファルサス王家" to Box(100, 100, 400, 140),
+			"おうたいし" to Box(150, 150, 260, 170),
+			"王太子" to Box(140, 168, 280, 210),
+		)
+		val result = TextDetection.withoutRubyLines(lines, box = { it.second }, text = { it.first })
+		assertEquals(listOf("ファルサス王家", "王太子"), result.map { it.first })
+	}
+
+	@Test
+	fun aSmallLineOfKanaAwayFromTheTextIsKept() {
+		val lines = listOf("ねえ" to Box(100, 0, 160, 20), "王太子" to Box(100, 200, 240, 240))
+		assertEquals(lines, TextDetection.withoutRubyLines(lines, box = { it.second }, text = { it.first }))
+	}
 }

@@ -62,44 +62,64 @@ class PaddleTextRecognizer(
 				}
 			}
 		}
-		val blocks = toBlocks(lines).map { block ->
+		val blocks = toBlocks(lines).map { found ->
 			currentCoroutineContext().ensureActive()
-			if (blockReader != null && block.isVertical) readAgain(bitmap, block, blockReader) else block
+			if (blockReader != null && found.block.isVertical) readAgain(bitmap, found, blockReader) else found.block
 		}
 		arrange(blocks)
 	}
 
-	/** [block] as [reader] reads it, unless that reading is too far from Paddle's to be believed. */
-	private fun readAgain(page: Bitmap, block: OcrBlock, reader: MangaOcrReader): OcrBlock {
-		val bounds = block.bounds
+	/**
+	 * [found] as [reader] reads it, a couple of columns at a time: manga-ocr squashes what it is
+	 * given into a square, and a narration box of five long columns comes out too small to read.
+	 * Paddle's reading stays only when Paddle was sure of it and manga-ocr's is nothing like it.
+	 */
+	private fun readAgain(page: Bitmap, found: Found, reader: MangaOcrReader): OcrBlock {
+		val bounds = found.block.bounds
 		// A margin around the text, as manga-ocr saw bubbles in training.
 		val margin = (min(bounds.width(), bounds.height()) * BLOCK_MARGIN).roundToInt()
-		val left = max(bounds.left - margin, 0)
-		val top = max(bounds.top - margin, 0)
-		val crop = Bitmap.createBitmap(
-			page, left, top,
-			min(bounds.right + margin, page.width) - left,
-			min(bounds.bottom + margin, page.height) - top,
+		val area = Box(
+			max(bounds.left - margin, 0),
+			max(bounds.top - margin, 0),
+			min(bounds.right + margin, page.width),
+			min(bounds.bottom + margin, page.height),
 		)
-		val text = try {
-			reader.read(crop)
-		} finally {
-			if (crop !== page) {
-				crop.recycle()
+		val text = TextDetection.columnChunks(area, found.columns, MAX_CHUNK_COLUMNS).joinToString("") { chunk ->
+			val crop = Bitmap.createBitmap(page, chunk.left, chunk.top, chunk.width, chunk.height)
+			try {
+				reader.read(crop)
+			} finally {
+				if (crop !== page) {
+					crop.recycle()
+				}
 			}
 		}
-		return if (MangaOcrText.isImplausible(text, block.text)) block else block.copy(text = text)
+		val isPaddleBetter = found.confidence >= TRUSTED_CONFIDENCE && MangaOcrText.isImplausible(text, found.block.text)
+		return if (isPaddleBetter) found.block else found.block.copy(text = text)
 	}
 
 	private suspend fun readTile(bitmap: Bitmap, offsetY: Int, out: MutableList<Line>) {
 		for (box in TextDetection.joinColumns(detect(bitmap))) {
 			// Reading a line takes a moment; a new photo should not wait for the whole page.
 			currentCoroutineContext().ensureActive()
-			val text = read(bitmap, box).text.trim()
-			if (text.isNotEmpty()) {
-				out += Line(Box(box.left, box.top + offsetY, box.right, box.bottom + offsetY), text)
-			}
+			val reading = readEitherWay(bitmap, box)
+			// Kept even when Paddle could read nothing in it: it is still text the detector found, and
+			// a column dropped here would be cut out of what manga-ocr is given to read.
+			out += Line(Box(box.left, box.top + offsetY, box.right, box.bottom + offsetY), reading.text.trim(), reading.confidence)
 		}
+	}
+
+	/**
+	 * A squarish box is read both ways up, and the reading Paddle is surer of wins. It is a short
+	 * column, or a short line, or - most often in manga - a column that has run into its furigana.
+	 */
+	private fun readEitherWay(page: Bitmap, box: Box): CtcDecoder.Result {
+		if (box.isVertical() || box.width >= box.height * HORIZONTAL_RATIO) {
+			return read(page, box, box.isVertical())
+		}
+		val upright = read(page, box, isColumn = false)
+		val turned = read(page, box, isColumn = true)
+		return if (turned.confidence > upright.confidence) turned else upright
 	}
 
 	/** The lines of text in [bitmap], in its pixels. */
@@ -128,11 +148,11 @@ class PaddleTextRecognizer(
 		}
 	}
 
-	/** The text in [box] of [page], read as one line. */
-	private fun read(page: Bitmap, box: Box): CtcDecoder.Result {
+	/** The text in [box] of [page], read as one line: a column of vertical text if [isColumn]. */
+	private fun read(page: Bitmap, box: Box, isColumn: Boolean): CtcDecoder.Result {
 		// A column is turned a quarter anticlockwise to lie as a line with its top at the left: the
 		// way the recogniser was trained to see vertical text.
-		val matrix = if (box.isVertical()) Matrix().apply { setRotate(-90f) } else null
+		val matrix = if (isColumn) Matrix().apply { setRotate(-90f) } else null
 		val crop = Bitmap.createBitmap(page, box.left, box.top, box.width, box.height, matrix, true)
 		val line = crop.scale(max(ceil(READ_HEIGHT.toFloat() * crop.width / crop.height).toInt(), 1), READ_HEIGHT)
 		val probs = try {
@@ -180,26 +200,32 @@ class PaddleTextRecognizer(
 	 * Lines into blocks. Columns of vertical text close enough to touch are one speech bubble or
 	 * paragraph, read right to left, and a squarish box among them - a column only a character or
 	 * two long - belongs with them; furigana beside them do not. Horizontal lines stay a block each,
-	 * for [Paragraphs] to join.
+	 * for [Paragraphs] to join, less the furigana over them.
 	 */
-	private fun toBlocks(lines: List<Line>): List<OcrBlock> {
+	private fun toBlocks(lines: List<Line>): List<Found> {
 		val (horizontal, rest) = lines.partition { it.box.width >= it.box.height * HORIZONTAL_RATIO }
-		val blocks = horizontal.mapTo(ArrayList()) { it.toBlock() }
+		val blocks = TextDetection.withoutRubyLines(horizontal, box = { it.box }, text = { it.text })
+			.mapTo(ArrayList()) { it.toFound() }
 		val columns = rest.filter { it.box.isVertical() }
 		if (columns.isEmpty()) {
-			return blocks + rest.map { it.toBlock() }
+			return blocks + rest.map { it.toFound() }
 		}
 		for (region in TextRegions.cluster(rest, medianWidth(columns)) { it.box }) {
 			if (region.none { it.box.isVertical() }) {
-				blocks += region.map { it.toBlock() }
+				blocks += region.map { it.toFound() }
 				continue
 			}
 			val text = TextDetection.withoutFurigana(region, box = { it.box }, text = { it.text })
-			blocks += OcrBlock(
-				text = text.sortedByDescending { it.box.right }.joinToString("") { it.text },
-				bounds = region.map { it.box }.reduce(Box::union).toRect(),
-				isVertical = true,
-				charSize = medianWidth(region),
+			val length = text.sumOf { it.text.length }
+			blocks += Found(
+				block = OcrBlock(
+					text = text.sortedByDescending { it.box.right }.joinToString("") { it.text },
+					bounds = region.map { it.box }.reduce(Box::union).toRect(),
+					isVertical = true,
+					charSize = medianWidth(region),
+				),
+				columns = region.filter { it.box.isVertical() }.map { it.box },
+				confidence = if (length == 0) 0f else text.sumOf { it.confidence.toDouble() * it.text.length }.toFloat() / length,
 			)
 		}
 		return blocks
@@ -207,16 +233,24 @@ class PaddleTextRecognizer(
 
 	private fun medianWidth(lines: List<Line>): Int = lines.map { it.box.width }.sorted()[lines.size / 2]
 
-	private fun Line.toBlock() = OcrBlock(
-		text = text,
-		bounds = box.toRect(),
-		isVertical = box.isVertical(),
-		charSize = if (box.isVertical()) box.width else TextDetection.charSizeOf(box, text),
+	private fun Line.toFound() = Found(
+		block = OcrBlock(
+			text = text,
+			bounds = box.toRect(),
+			isVertical = box.isVertical(),
+			charSize = if (box.isVertical()) box.width else TextDetection.charSizeOf(box, text),
+		),
+		columns = if (box.isVertical()) listOf(box) else emptyList(),
+		confidence = confidence,
 	)
 
 	private fun Box.toRect() = Rect(left, top, right, bottom)
 
-	private class Line(val box: Box, val text: String)
+	/** A line as Paddle read it; [text] is empty where it could read nothing. */
+	private class Line(val box: Box, val text: String, val confidence: Float)
+
+	/** A block with Paddle's reading of it, the columns it is set in, and how sure Paddle was. */
+	private class Found(val block: OcrBlock, val columns: List<Box>, val confidence: Float)
 
 	private companion object {
 
@@ -233,6 +267,15 @@ class PaddleTextRecognizer(
 
 		/** The margin around a block given to manga-ocr, as a part of the block's shorter side. */
 		const val BLOCK_MARGIN = 0.1f
+
+		/** manga-ocr is given at most this many columns at a time. */
+		const val MAX_CHUNK_COLUMNS = 2
+
+		/**
+		 * Paddle's reading of a block outranks a very different one from manga-ocr only when Paddle is
+		 * at least this sure of it. Below that, on a real page, it is Paddle reading garbage.
+		 */
+		const val TRUSTED_CONFIDENCE = 0.9f
 
 		/** A box at least this many times wider than tall is a line of horizontal text. */
 		const val HORIZONTAL_RATIO = 1.5f

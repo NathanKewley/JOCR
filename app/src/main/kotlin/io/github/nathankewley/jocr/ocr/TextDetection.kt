@@ -43,6 +43,9 @@ object TextDetection {
 	/** A column of kana less than half as wide as the others beside it is furigana. */
 	private const val FURIGANA_WIDTH = 0.5f
 
+	/** A line with no kanji at most this many times the height of the line below it is furigana. */
+	private const val RUBY_HEIGHT = 0.7f
+
 	/** A detector box's margin around its text, as a part of its height. */
 	private const val MARGIN = 0.3f
 
@@ -141,6 +144,35 @@ object TextDetection {
 	}
 
 	/**
+	 * [area], a block of vertical text set in [columns], cut into pieces of at most [maxColumns]
+	 * columns each, right to left. Each piece runs the block's full height and reaches halfway into
+	 * the gap to its neighbours, so nothing between the columns is lost.
+	 */
+	fun columnChunks(area: Box, columns: List<Box>, maxColumns: Int): List<Box> {
+		// Boxes that overlap side to side - pieces of one column, or a column and its furigana - are
+		// one column here.
+		val merged = ArrayList<IntArray>()
+		for (box in columns.sortedByDescending { it.right }) {
+			val last = merged.lastOrNull()
+			if (last != null && box.left < last[1] && box.right > last[0]) {
+				last[0] = min(last[0], box.left)
+				last[1] = max(last[1], box.right)
+			} else {
+				merged += intArrayOf(box.left, box.right)
+			}
+		}
+		val groups = merged.chunked(maxColumns)
+		if (groups.size < 2) {
+			return listOf(area)
+		}
+		return groups.mapIndexed { i, group ->
+			val right = if (i == 0) area.right else (groups[i - 1].last()[0] + group.first()[1]) / 2
+			val left = if (i == groups.lastIndex) area.left else (group.last()[0] + groups[i + 1].first()[1]) / 2
+			Box(left, area.top, right, area.bottom)
+		}
+	}
+
+	/**
 	 * [columns] of one block of vertical text without its furigana: the narrow columns of kana
 	 * beside the kanji they spell out. The recogniser reads them as more text - さいふ財布 - and they
 	 * would be looked up as words of their own.
@@ -152,6 +184,24 @@ object TextDetection {
 			box(column).width < width * FURIGANA_WIDTH && text(column).all { it in '぀'..'ヿ' }
 		}
 	}
+
+	/**
+	 * [lines] of horizontal text without the furigana set above them: a line with no kanji in it,
+	 * well under the height of the line just below, that sits over at least half of that line. It is
+	 * the reading of the words below it - おうたいし over 王太子 - not more text.
+	 */
+	fun <T> withoutRubyLines(lines: List<T>, box: (T) -> Box, text: (T) -> String): List<T> = lines.filterNot { ruby ->
+		val r = box(ruby)
+		text(ruby).none { it.isKanji() } && lines.any { base ->
+			val b = box(base)
+			base !== ruby &&
+				r.height <= b.height * RUBY_HEIGHT &&
+				min(r.right, b.right) - max(r.left, b.left) >= r.width / 2 &&
+				b.top - r.bottom in -r.height..r.height
+		}
+	}
+
+	private fun Char.isKanji(): Boolean = this in '一'..'鿿' || this in '㐀'..'䶿' || this == '々'
 
 	/**
 	 * The size of one character of [text], read as one horizontal line from [box].

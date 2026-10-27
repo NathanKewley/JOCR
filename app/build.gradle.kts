@@ -15,8 +15,8 @@ android {
 		// ImageDecoder: applies a camera photo's EXIF rotation and decodes HEIC from the gallery.
 		minSdk = 28
 		targetSdk = 37
-		versionCode = 1
-		versionName = "0.1.0"
+		versionCode = 3
+		versionName = "0.2.1"
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		// ML Kit's OCR and translation libraries are ~28 MB per ABI, ONNX Runtime ~34 MB more. Phones
 		// are arm64; x86_64 is for the emulator. The 32-bit ABIs would add tens of MB for devices that
